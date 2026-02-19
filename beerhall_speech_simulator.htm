@@ -1,0 +1,1289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Beer Hall Speech Simulator (Post-WWI)</title>
+<style>
+  :root{
+    --bg:#12100c;
+    --wood1:#2b1d12;
+    --wood2:#3a2617;
+    --paper:#efe6d3;
+    --ink:#1a1a1a;
+    --muted:#5c564b;
+    --accent:#d8b66c;
+    --accent2:#b78a3a;
+    --danger:#c25151;
+    --good:#4f9a6b;
+    --card:#1a1410;
+    --line:rgba(255,255,255,.08);
+    --shadow: 0 12px 40px rgba(0,0,0,.5);
+    --radius:18px;
+    --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  }
+  body{
+    margin:0; font-family:var(--font); color:#eee;
+    background:
+      radial-gradient(1200px 500px at 50% -10%, rgba(216,182,108,.25), transparent 60%),
+      radial-gradient(900px 700px at 0% 30%, rgba(184,136,58,.18), transparent 60%),
+      linear-gradient(180deg, #0d0b08, #15110c 60%, #0c0a08);
+    min-height:100vh;
+  }
+  header{
+    position:sticky; top:0; z-index:5;
+    backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(18,16,12,.92), rgba(18,16,12,.70));
+    border-bottom:1px solid var(--line);
+  }
+  .wrap{max-width:1150px; margin:0 auto; padding:16px;}
+  .topbar{
+    display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  }
+  .brand{
+    display:flex; align-items:center; gap:12px;
+  }
+  .crest{
+    width:44px; height:44px; border-radius:14px;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), transparent 55%),
+      linear-gradient(135deg, var(--wood2), var(--wood1));
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow: var(--shadow);
+    display:grid; place-items:center;
+  }
+  .crest span{font-weight:800; color:var(--accent); letter-spacing:.5px;}
+  h1{margin:0; font-size:18px; letter-spacing:.3px;}
+  .subtitle{margin:0; color:rgba(255,255,255,.7); font-size:12px;}
+  .pillbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .pill{
+    display:flex; gap:8px; align-items:center;
+    padding:8px 10px; border-radius:999px;
+    background: rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.10);
+    font-size:12px; color:rgba(255,255,255,.85);
+  }
+  .pill b{color:#fff;}
+  main{max-width:1150px; margin:0 auto; padding:18px 16px 40px;}
+  .grid{display:grid; grid-template-columns: 380px 1fr; gap:16px;}
+  @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
+  .card{
+    background:
+      radial-gradient(800px 120px at 20% 0%, rgba(216,182,108,.10), transparent 60%),
+      linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.10);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  .card h2{
+    margin:0; padding:14px 14px; font-size:14px; letter-spacing:.2px;
+    border-bottom:1px solid var(--line);
+    background: linear-gradient(180deg, rgba(43,29,18,.55), rgba(26,20,16,.25));
+  }
+  .card .body{padding:14px;}
+  .note{
+    background: rgba(239,230,211,.10);
+    border:1px solid rgba(239,230,211,.22);
+    color:rgba(255,255,255,.85);
+    border-radius:14px;
+    padding:10px 10px;
+    font-size:12px;
+    line-height:1.35;
+  }
+  .btnrow{display:flex; gap:10px; flex-wrap:wrap;}
+  button{
+    appearance:none; border:none; cursor:pointer;
+    padding:10px 12px; border-radius:14px;
+    font-weight:700; font-size:13px;
+    color:#14110c;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    box-shadow: 0 10px 22px rgba(0,0,0,.35);
+  }
+  button.secondary{
+    color:#f5f2ea;
+    background: rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:none;
+  }
+  button.danger{
+    color:#fff;
+    background: linear-gradient(180deg, #d26a6a, #a74646);
+  }
+  button:disabled{opacity:.45; cursor:not-allowed;}
+  select, input[type="text"]{
+    width:100%;
+    background: rgba(0,0,0,.25);
+    border:1px solid rgba(255,255,255,.14);
+    color:#fff;
+    border-radius:14px;
+    padding:10px 12px;
+    font-size:13px;
+    outline:none;
+  }
+  label{font-size:12px; color:rgba(255,255,255,.78); display:block; margin-bottom:6px;}
+  .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+  @media (max-width: 540px){ .row{grid-template-columns:1fr;} }
+  .tabs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+  .tab{
+    padding:8px 10px; border-radius:999px;
+    background: rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.10);
+    font-size:12px; color:rgba(255,255,255,.85);
+    cursor:pointer; user-select:none;
+  }
+  .tab.active{
+    background: rgba(216,182,108,.22);
+    border-color: rgba(216,182,108,.35);
+    color:#fff;
+  }
+  .sentence{
+    display:flex; gap:10px; align-items:flex-start;
+    padding:10px 10px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.18);
+    margin-bottom:10px;
+  }
+  .sentence:hover{border-color: rgba(216,182,108,.30);}
+  .sentence input{margin-top:3px; transform: scale(1.15);}
+  .sentence .meta{
+    font-size:11px; color:rgba(255,255,255,.6);
+    margin-top:4px;
+  }
+  .speechpaper{
+    background: radial-gradient(700px 200px at 30% 0%, rgba(255,255,255,.08), transparent 60%), rgba(239,230,211,.10);
+    border:1px solid rgba(239,230,211,.24);
+    border-radius:16px;
+    padding:12px;
+    color:rgba(255,255,255,.92);
+    line-height:1.45;
+    min-height:140px;
+    white-space:pre-wrap;
+  }
+  .kpi{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;}
+  @media (max-width: 980px){ .kpi{grid-template-columns: repeat(2, 1fr);} }
+  .kbox{
+    background: rgba(0,0,0,.18);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:16px;
+    padding:10px;
+  }
+  .kbox .t{font-size:11px; color:rgba(255,255,255,.65);}
+  .kbox .v{font-size:18px; font-weight:900; margin-top:2px;}
+  .kbox .s{font-size:11px; color:rgba(255,255,255,.70); margin-top:2px;}
+  .log{
+    max-height:220px; overflow:auto; padding-right:4px;
+    font-size:12px; line-height:1.35;
+  }
+  .log .item{
+    padding:10px 10px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.18);
+    margin-bottom:10px;
+  }
+  .tag{
+    display:inline-block;
+    font-size:10px;
+    padding:3px 8px;
+    border-radius:999px;
+    margin-right:6px;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.07);
+    color:rgba(255,255,255,.82);
+  }
+  .tag.good{background: rgba(79,154,107,.18); border-color: rgba(79,154,107,.35);}
+  .tag.bad{background: rgba(194,81,81,.18); border-color: rgba(194,81,81,.35);}
+  .tag.warn{background: rgba(216,182,108,.18); border-color: rgba(216,182,108,.35);}
+  .footerhint{
+    margin-top:10px; font-size:11px; color:rgba(255,255,255,.65);
+  }
+  .modalbg{
+    position:fixed; inset:0; background: rgba(0,0,0,.65);
+    display:none; align-items:center; justify-content:center; z-index:50;
+    padding:18px;
+  }
+  .modal{
+    max-width:760px; width:100%;
+    background: linear-gradient(180deg, rgba(26,20,16,.95), rgba(18,16,12,.95));
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  .modal header{
+    position:unset;
+    background: linear-gradient(180deg, rgba(43,29,18,.85), rgba(26,20,16,.55));
+    border-bottom:1px solid rgba(255,255,255,.10);
+  }
+  .modal .content{padding:14px;}
+  .small{font-size:12px; color:rgba(255,255,255,.75); line-height:1.45;}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="crest" aria-hidden="true"><span>🍺</span></div>
+        <div>
+          <h1>Beer Hall Speech Simulator</h1>
+          <p class="subtitle">Post‑WWI rhetoric &amp; mobilisation (classroom simulation)</p>
+        </div>
+      </div>
+      <div class="pillbar">
+        <div class="pill">Session: <b id="timeLeft">70:00</b></div>
+        <div class="pill">Round: <b id="roundNum">0</b></div>
+        <div class="pill">Party: <b id="partyName">Not selected</b></div>
+        <div class="pill">Influence: <b id="inflTop">0</b></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <!-- LEFT: Setup + Selection -->
+    <section class="card" aria-label="Setup and sentence selection">
+      <h2>1) Choose Party &amp; Build Speech</h2>
+      <div class="body">
+        <div class="note">
+          <b>Teacher intent:</b> This tool demonstrates how persuasive rhetoric, economic fear, scapegoating, and calls for “strong leadership”
+          can accelerate dangerous political movements. It awards points for popularity, but also triggers <b>consequences</b> for unlawful/violent
+          calls to action. Use for analysis and reflection.
+        </div>
+        <div style="height:12px"></div>
+
+        <div class="row">
+          <div>
+            <label for="studentName">Student name (optional)</label>
+            <input id="studentName" type="text" placeholder="e.g., Liam" />
+          </div>
+          <div>
+            <label for="partySelect">Party</label>
+            <select id="partySelect"></select>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="tabs" id="tabs"></div>
+
+        <div id="sentenceList"></div>
+
+        <div style="height:12px"></div>
+        <label>Live speech preview</label>
+        <div class="speechpaper" id="speechPreview">Select sentences to assemble your speech…</div>
+
+        <div style="height:12px"></div>
+        <div class="btnrow">
+          <button id="submitBtn" disabled>Submit Speech</button>
+          <button class="secondary" id="clearBtn" disabled>Clear Selection</button>
+          <button class="secondary" id="copyBtn" disabled>Copy Speech</button>
+        </div>
+        <div class="footerhint">Tip: aim for 6–10 sentences. Try different tones across multiple rounds.</div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Dashboard -->
+    <section class="card" aria-label="Results dashboard">
+      <h2>2) Results Dashboard</h2>
+      <div class="body">
+        <div class="kpi">
+          <div class="kbox">
+            <div class="t">Influence points</div>
+            <div class="v" id="infl">0</div>
+            <div class="s">Popularity &amp; leverage</div>
+          </div>
+          <div class="kbox">
+            <div class="t">Members</div>
+            <div class="v" id="members">0</div>
+            <div class="s">People joining your party</div>
+          </div>
+          <div class="kbox">
+            <div class="t">Funds</div>
+            <div class="v" id="funds">0</div>
+            <div class="s">Donations &amp; dues</div>
+          </div>
+          <div class="kbox">
+            <div class="t">Public trust</div>
+            <div class="v" id="trust">50</div>
+            <div class="s">Higher = less crackdown</div>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="note">
+          <b>How scoring works (simple):</b> Each speech produces a mix of <b>appeal</b> (crowd growth) and <b>risk</b> (backlash/crackdown).
+          Extreme calls (e.g., violent overthrow, dictatorship, information control) can spike short‑term support in some crowds but raise risk and
+          reduce trust.
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="btnrow">
+          <button class="secondary" id="exportBtn">Export Totals</button>
+          <button class="secondary" id="resetBtn">Reset Game</button>
+          <button class="secondary" id="helpBtn">Teacher Notes</button>
+        </div>
+
+        <div style="height:12px"></div>
+        <label>Event &amp; crowd reaction log</label>
+        <div class="log" id="log"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="modalbg" id="modalBg" role="dialog" aria-modal="true" aria-label="Teacher Notes">
+  <div class="modal">
+    <header>
+      <div class="wrap" style="padding:12px 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <div>
+            <h1 style="font-size:16px; margin:0;">Teacher Notes &amp; Controls</h1>
+            <div class="subtitle" style="margin-top:2px;">Quick guidance for a 70‑minute lesson</div>
+          </div>
+          <button class="secondary" id="closeModal">Close</button>
+        </div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="small">
+        <p><b>Suggested flow (70 min):</b> 5 min setup → 45 min speech rounds (aim 6–10 rounds) → 10 min export totals → 10 min debrief.</p>
+        <p><b>Debrief prompts:</b> Which rhetorical moves increased membership fastest? What increased backlash/arrests? How did “fear” and
+        “betrayal” framing change choices? What parallels exist with Weimar Germany (economic distress, humiliation narratives, polarisation)?</p>
+        <p><b>Safety:</b> This is a historical learning simulation. Students should not use real-world hate targets. The game discourages harm by
+        adding consequences for unlawful/violent mobilisation.</p>
+        <hr style="border:none; border-top:1px solid rgba(255,255,255,.10); margin:12px 0;">
+        <p><b>Export Totals:</b> Tap “Export Totals” to copy a summary to clipboard (or download JSON if supported).</p>
+        <p class="mono" id="debugLine" style="opacity:.8"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Single-file classroom web app (offline). */
+/* ---------- Data ---------- */
+
+const PARTIES = [
+  {
+    id: "NRL",
+    name: "National Renewal League",
+    vibe: "passionate, emotional, clear enemies/solutions",
+    focus: ["National pride", "Strength", "Unity", "Restoration"],
+    baseCrowds: { workers: 0.8, veterans: 1.0, middle: 1.0, youth: 1.1, elites: 0.7 }
+  },
+  {
+    id: "WSF",
+    name: "Workers’ Solidarity Front",
+    vibe: "anger at inequality, workers vs elites",
+    focus: ["Class struggle", "Economic injustice", "Collective action"],
+    baseCrowds: { workers: 1.25, veterans: 0.9, middle: 0.85, youth: 1.0, elites: 0.55 }
+  },
+  {
+    id: "TVA",
+    name: "Traditional Values Alliance",
+    vibe: "calm but firm, moral decline, discipline",
+    focus: ["Moral collapse", "Family values", "Obedience & respect"],
+    baseCrowds: { workers: 0.9, veterans: 1.05, middle: 1.2, youth: 0.75, elites: 0.95 }
+  },
+  {
+    id: "VB",
+    name: "Veterans’ Brotherhood",
+    vibe: "hardship, betrayal narrative, brotherhood",
+    focus: ["Sacrifice", "Betrayal", "Strength through unity"],
+    baseCrowds: { workers: 0.85, veterans: 1.35, middle: 0.95, youth: 0.9, elites: 0.75 }
+  },
+  {
+    id: "NRC",
+    name: "National Reconstruction Council",
+    vibe: "calm, logical, practical plans",
+    focus: ["Infrastructure", "Economic planning", "Experts in charge"],
+    baseCrowds: { workers: 1.0, veterans: 0.95, middle: 1.15, youth: 0.95, elites: 1.1 }
+  }
+];
+
+const CROWDS = [
+  { id:"workers", name:"Factory workers", volatility: 0.9, donationRate: 0.7 },
+  { id:"veterans", name:"War veterans", volatility: 1.1, donationRate: 0.6 },
+  { id:"middle", name:"Small business & middle class", volatility: 1.0, donationRate: 0.9 },
+  { id:"youth", name:"Unemployed youth", volatility: 1.2, donationRate: 0.5 },
+  { id:"elites", name:"Business & professionals", volatility: 0.8, donationRate: 1.4 },
+];
+
+// Sentence banks from user-provided prompts.
+const BANKS = {
+  "Emotion: Rage": [
+    "Our nation has been dragged into the dirt while cowards shake hands and smile. I stand before you furious at what has been done to us.",
+    "They tore the heart out of this country and told us to be grateful for the scraps. I refuse to be grateful for humiliation.",
+    "You feel it in your chest, the burning sense that something sacred was stolen. I feel it too, and I will not silence it.",
+    "They expect us to bow our heads and accept disgrace as our future. I say we lift our heads and spit defiance.",
+    "The anger you feel is not wrong. It is the voice of a people who know they were betrayed.",
+    "We were promised honor and given chains. We were promised victory and given surrender.",
+    "I am done pretending this is acceptable. I am done pretending this is normal."
+  ],
+  "Emotion: Grief": [
+    "I look across this crowd and see wounded hearts, not defeated souls. Our country is bleeding, and no one in power seems to care.",
+    "We buried more than soldiers. We buried dreams, futures, and the belief that sacrifice meant something.",
+    "Every empty chair at a family table tells the same story. Something precious was taken from us.",
+    "We were told their deaths had meaning. Now we are told to forget them.",
+    "A nation in mourning must not be rushed into silence. We deserve time, truth, and respect.",
+    "Our sorrow is heavy, but it is shared. That means we are not alone.",
+    "Even in grief, we are still a people. Even in loss, we still exist."
+  ],
+  "Emotion: Pride": [
+    "They failed to destroy us. They failed to erase us.",
+    "We are still standing, even after everything thrown against us.",
+    "A weak nation would have collapsed. We did not.",
+    "We endure because strength lives in our blood.",
+    "Our history did not end in defeat. It waits for its next chapter.",
+    "You are the descendants of builders, fighters, and survivors. Never forget that.",
+    "The world may doubt us, but we know who we are."
+  ],
+  "Emotion: Fear": [
+    "Look around you and ask honestly: does this feel safe? Does this feel stable?",
+    "Our streets feel unfamiliar. Our future feels uncertain.",
+    "When leadership fails, darkness rushes in.",
+    "A nation without direction becomes prey.",
+    "If nothing changes, things will get worse.",
+    "We stand at the edge of something dangerous.",
+    "Either we act now, or we suffer later."
+  ],
+  "Emotion: Hope": [
+    "Even in ruins, seeds can grow.",
+    "Even after collapse, nations can rise.",
+    "Our story is not finished.",
+    "What was broken can be rebuilt.",
+    "What was stolen can be reclaimed.",
+    "A better future is still possible.",
+    "It begins with us."
+  ],
+  "Enemies: Foreign powers": [
+    "Foreign powers sit in comfortable halls while dictating our suffering. They profit from our weakness.",
+    "They redraw borders and futures like lines on paper. They never see the lives they destroy.",
+    "Other nations grow rich while we are forced to starve. That is not justice.",
+    "They call their demands peace. We call them punishment.",
+    "They crushed us not to protect the world, but to dominate it.",
+    "They fear our potential, so they try to keep us small.",
+    "A nation that kneels to foreign masters is no nation at all."
+  ],
+  "Enemies: Corrupt political elites": [
+    "Our leaders sit in warm rooms while citizens freeze. They do not live our reality.",
+    "They speak in polite language while signing away our future.",
+    "They protect themselves first, and the nation last.",
+    "They trade honor for comfort.",
+    "They call surrender “pragmatic.” I call it cowardice.",
+    "They govern for power, not for people.",
+    "They failed us."
+  ],
+  "Enemies: Profiteers & business elites": [
+    "While soldiers bled, others counted money.",
+    "Some people made fortunes from our misery.",
+    "They grow rich on shortages, hunger, and desperation.",
+    "They see crisis as opportunity.",
+    "They never fought, but they always win.",
+    "They hide behind contracts and paperwork.",
+    "Their wealth is built on our suffering."
+  ],
+  "Enemies: Weak leadership": [
+    "We were led by people who did not know how to lead.",
+    "They hesitated while everything burned.",
+    "They argued while the nation collapsed.",
+    "They lacked courage when courage mattered most.",
+    "They watched disaster coming and did nothing.",
+    "A nation cannot survive weak hands at the wheel.",
+    "We are paying the price for their failure."
+  ],
+  "Enemies: Internal traitors": [
+    "Not all enemies stand across borders. Some stand among us.",
+    "Some people cheered our downfall.",
+    "Some people welcomed our humiliation.",
+    "Some people worked against their own nation.",
+    "They wore the mask of patriotism while cutting our throat.",
+    "They sold loyalty for advantage.",
+    "Betrayal from inside hurts more than attack from outside."
+  ],
+  "Promises: Law & order": [
+    "I will restore discipline in our streets, our workplaces, and our institutions. A nation without order cannot survive, and I refuse to let chaos rule us any longer.",
+    "Crime and unrest have been allowed to grow because leaders were weak and afraid. I will replace weakness with firm, decisive enforcement of the law.",
+    "Every citizen deserves to feel safe in their own neighbourhood and workplace. I will build a system where justice is swift, firm, and visible.",
+    "We will no longer tolerate those who disrupt stability and undermine society. The state must have the power to remove threats before they destroy us.",
+    "Law must serve the people, not protect criminals and exploiters. I will reshape our justice system to punish wrongdoing without hesitation.",
+    "Discipline built our nation once before, and discipline will rebuild it again. I will make order the foundation of national life.",
+    "A strong state must never apologise for protecting its citizens. I will give our authorities the tools they need to crush disorder."
+  ],
+  "Promises: National revival": [
+    "I will lead a rebirth of national spirit that awakens pride in every citizen. Our people must remember who we truly are.",
+    "This nation will rise from humiliation into greatness once more. I will make revival not a dream, but a reality.",
+    "We will rebuild our culture, our traditions, and our sense of destiny. A nation that remembers itself cannot be defeated.",
+    "I will restore honour to our flag, our language, and our history. No foreign power will define us again.",
+    "The world will witness our return as a strong and respected nation. We will no longer beg for dignity—we will take it.",
+    "Our rebirth begins the moment we stop seeing ourselves as victims. I will teach our people to stand tall again.",
+    "This country does not need permission to exist proudly. I will ignite a revival that cannot be stopped."
+  ],
+  "Promises: Economic control": [
+    "I will place the economy under firm national direction. Speculators and profiteers will no longer decide our future.",
+    "The state must guide industry so that it serves the people, not private greed. I will make national needs come first.",
+    "We will create jobs through massive rebuilding projects. Every citizen who wants to work will have work.",
+    "Our wealth must stay in our nation, not flow into foreign hands. I will take control of key industries.",
+    "Money must regain its value and meaning. I will stabilise prices through strict national regulation.",
+    "I will end the rule of financial chaos. The economy will serve the nation, not destroy it.",
+    "Prosperity will be planned, organised, and enforced. No more gambling with people’s livelihoods."
+  ],
+  "Promises: Unity & belonging": [
+    "I will unite the people into one national community. Division has made us weak.",
+    "We must see ourselves as one body with one destiny. I will tear down the walls between citizens.",
+    "Everyone who serves the nation faithfully belongs. Loyalty will define membership in our society.",
+    "I will replace class conflict with national solidarity. We rise together or we fall together.",
+    "No citizen should feel alone or forgotten. I will build a movement that gives people purpose.",
+    "Unity is strength, and strength is survival. I will make unity the heart of national life.",
+    "A divided nation cannot be saved. I will forge one people, one will, one future."
+  ],
+  "Promises: Strength & authority": [
+    "I will rule with firmness because the times demand it. Soft leadership has failed.",
+    "The nation needs a leader who acts, not one who hesitates. I will be that leader.",
+    "Authority must be respected if society is to function. I will restore respect for leadership.",
+    "I will not be controlled by weak politicians or foreign pressure. I answer only to the nation.",
+    "Power must be used boldly in moments of crisis. I will not apologise for decisive action.",
+    "The people deserve a leader who is fearless. I will lead without doubt.",
+    "History remembers strong leaders, not cautious ones. I will become the strength this nation needs."
+  ],
+  "Must be done": [
+    // Section 4 (grouped options are handled in scoring by keyword patterns)
+    "Our nation must be torn down to its foundations and rebuilt stronger than before. We cannot patch a broken house — we must construct a new one with iron beams and unbreakable walls.",
+    "We must reorganise every part of society so it serves the nation first. Weak systems will be replaced, and weak leadership will be swept aside.",
+    "This is not the time for gentle reform. This is the time for complete reconstruction of how we live, work, and fight.",
+    "We will rebuild our industries, our streets, our schools, and our spirit. Nothing will be allowed to remain rotten.",
+    "A new order must rise where the old one failed. A disciplined nation will replace a divided one.",
+    "We will create a system that rewards strength, loyalty, and sacrifice. Those who refuse to contribute will be left behind.",
+    "Our future will not grow from compromise. It will be forged through decisive rebuilding.",
+
+    "Only strength earns respect in this world. A nation that refuses to show strength will always be crushed.",
+    "We must stop begging and start demanding what is ours. Power does not come from words — it comes from force.",
+    "Our enemies did not defeat us with kindness. They defeated us with power, and power is how we will answer.",
+    "We must build strength in our bodies, our factories, and our armies. Weakness must be erased from our national character.",
+    "A strong nation does not apologise for existing. A strong nation takes its place.",
+    "We will raise a generation that fears nothing and obeys without hesitation. Discipline will be our shield.",
+    "We will no longer hide our strength. We will display it.",
+
+    "We must become one people with one purpose. Division is death.",
+    "No more parties pulling in different directions. No more arguing while our enemies watch.",
+    "We will speak with one voice and march in one direction. Anyone who refuses will stand alone.",
+    "A united nation cannot be defeated. A divided nation is already dead.",
+    "We must erase the idea of ‘us’ and ‘them.’ There is only the nation.",
+    "Personal interests must bow to national survival. Loyalty is not optional.",
+    "Our strength will come from standing shoulder to shoulder, not from individual comfort.",
+
+    "We will reclaim what was taken from us. History will remember that we did not accept humiliation.",
+    "They forced us to kneel. We will force them to look up at us.",
+    "Our honour will be restored through action, not negotiation.",
+    "The world must learn that humiliating our nation carries consequences.",
+    "We will reverse the shame written into our history.",
+    "What was stolen will be returned, one way or another.",
+    "We do not forget. We do not forgive. We restore.",
+
+    "Every citizen must work for the survival of the nation. No one is exempt.",
+    "Work is not just survival — it is duty.",
+    "We will build roads, factories, farms, and cities with our own hands.",
+    "Those who work will eat. Those who refuse will answer to the nation.",
+    "Our nation will be rebuilt through labour and discipline.",
+    "Idleness is betrayal.",
+    "We will become a nation that rises early and sleeps knowing it has served.",
+
+    "We must control what poisons the minds of our people.",
+    "Dangerous ideas weaken nations faster than armies.",
+    "We will protect our people from lies disguised as freedom.",
+    "Only ideas that strengthen the nation will be allowed to spread.",
+    "Truth must serve national survival.",
+    "We will silence voices that tear us apart.",
+    "A united mind is as important as a united army.",
+
+    "A nation cannot be led by committees and arguments.",
+    "We need one leader with the courage to decide.",
+    "One will leads. Millions follow.",
+    "Strong leadership brings order. Order brings survival.",
+    "We must place our faith in decisive leadership.",
+    "A single guiding hand is better than a thousand arguing mouths.",
+    "Give me your trust, and I will give you your nation back."
+  ],
+  "Who belongs": [
+    "Those who wake early and labour for the nation belong in our future. The builders, farmers, and workers are the backbone of survival.",
+    "Anyone willing to work honestly and sacrifice for the nation has a place here. Effort is the true measure of worth.",
+    "Our nation belongs to those who produce, not those who consume. The future will be built by working hands.",
+    "People who contribute to our strength deserve protection and respect. Laziness will no longer be tolerated.",
+    "We honour those who sweat, struggle, and persist. They are the true citizens.",
+    "A nation survives through labour. Workers belong.",
+    "Those who give their strength to the nation earn their place within it.",
+
+    "Those who fought and bled for this nation will never be forgotten. They belong at the centre of our future.",
+    "Veterans were promised honour and returned to poverty. We will correct that injustice.",
+    "The men who stood in the trenches understand sacrifice. They belong.",
+    "Those who carried rifles deserve to carry authority.",
+    "Veterans are proof of loyalty. Loyalty earns belonging.",
+    "Our wounded are not burdens. They are symbols of devotion.",
+    "Those who defended the nation must now shape it.",
+
+    "Those who obey the nation belong in the nation.",
+    "Loyalty will be valued more than clever words.",
+    "Citizens who respect authority deserve security.",
+    "Discipline creates stability. Stability creates survival.",
+    "Those who follow orders protect everyone.",
+    "A loyal population is an unbreakable shield.",
+    "Belonging begins with obedience.",
+
+    "Those who believe in our destiny belong in our future.",
+    "We need citizens who share the same vision.",
+    "Doubt weakens nations. Belief strengthens them.",
+    "Those who accept our mission earn their place.",
+    "We will build a nation of believers, not doubters.",
+    "Faith in the nation is loyalty in action.",
+    "Those who trust our path belong.",
+
+    "The future belongs to the young.",
+    "We will shape children into strong citizens.",
+    "Our youth will be raised with discipline and purpose.",
+    "The next generation will not repeat our mistakes.",
+    "We will train children to serve the nation.",
+    "Young minds will carry the new nation forward.",
+    "Our future will be built in classrooms and training grounds.",
+
+    "Anyone who accepts the new system may remain.",
+    "Those who cooperate will be protected.",
+    "Resistance will not be rewarded.",
+    "Acceptance means survival.",
+    "We offer belonging to those who comply.",
+    "Those who adapt will thrive.",
+    "The door is open to those who accept change.",
+
+    "No group stands above the nation.",
+    "Only citizens exist, not special categories.",
+    "Everyone serves the same purpose.",
+    "Personal identity comes second to national identity.",
+    "We erase divisions by replacing them with duty.",
+    "One nation. One people.",
+    "Belonging is defined by service, not by difference."
+  ],
+  "Call to action: System": [
+    // Section 6
+    "The system that crushed us cannot be reformed, only destroyed. If they will not listen to our suffering, then we will force them to hear us.",
+    "Every peaceful appeal has been ignored and mocked. When words fail, action must speak louder than any speech.",
+    "They took our future by violence, and violence is the only language they understand. We must take back what was stolen with our own hands.",
+    "No nation has ever been freed by asking politely. Freedom is seized, not granted.",
+    "We are not criminals for resisting an unjust order. We are soldiers in a new war for survival.",
+    "If the state refuses to protect its people, then the people must become their own protectors. We must rise and tear down what oppresses us.",
+    "Let them call us dangerous. A starving people has nothing left to lose.",
+
+    "We must capture every institution that decides our future. Parliament, courts, police, and schools must serve the people, not foreign masters.",
+    "We will win through relentless organisation and discipline. We will become too powerful to ignore.",
+    "Every town, every workplace, and every street must feel our presence. We will take power step by step until the nation belongs to us.",
+    "We will not beg for a place in their system. We will replace it.",
+    "Our movement will become the state itself. When that happens, the people finally rule.",
+    "We must build a force so united that no enemy can break it. Power comes from unity.",
+    "This is not about one election. This is about controlling the future of the nation.",
+
+    "A broken nation cannot be healed by endless arguing. It needs one strong hand to guide it.",
+    "Democracy has given us chaos. Discipline will give us order.",
+    "A single leader, backed by the people, can act quickly and decisively. That is what survival requires.",
+    "We do not need weak coalitions. We need clear direction.",
+    "One voice must speak for the nation, and that voice must be fearless.",
+    "Freedom means nothing without stability. A strong leader brings stability.",
+    "The people deserve leadership, not confusion.",
+
+    "We must rebuild our factories, farms, and cities with our own hands. Work will restore dignity.",
+    "Every citizen should have a job contributing to national recovery. No one should be left useless.",
+    "We will turn despair into construction. We will build roads, homes, and industries.",
+    "The nation must become one giant rebuilding project.",
+    "Strength comes from productivity, not begging.",
+    "We will rise through work, not charity.",
+    "A working nation is a powerful nation.",
+
+    "We must stop seeing ourselves as separate groups. We are one people.",
+    "The nation must come before party, class, or religion.",
+    "Division is how our enemies defeat us. Unity is how we survive.",
+    "We need a shared identity stronger than any difference.",
+    "One flag. One people. One destiny.",
+    "When we stand together, no force can break us.",
+    "Our future depends on unity, not debate."
+  ],
+  "Call to action: Crowd": [
+    // Section 7
+    "You must stop waiting for someone else to save you. The future will only change when ordinary people decide they have had enough.",
+    "Stand up, speak out, and refuse to be silent any longer. A nation only dies when its people surrender their voices.",
+    "Do not leave this square unchanged. Walk away today knowing you are part of something larger than yourself.",
+    "History is written by those who act, not those who watch. Today is the day you choose which side of history you stand on.",
+    "Your strength is greater than you have been told. When you move together, no force can ignore you.",
+    "The moment for action is not tomorrow or next year. It is now, while we still have a chance.",
+    "Rise not as scattered individuals, but as one united people. Unity turns fear into power.",
+
+    "Join this movement and help build something new from the ruins. We cannot rebuild alone.",
+    "Lend your hands, your voice, and your loyalty to this cause. Every supporter makes us stronger.",
+    "Stand beside us, and we will stand beside you. Together we form an unbreakable wall.",
+    "This movement is not mine; it belongs to all of you. Take ownership of it.",
+    "If you believe in change, prove it through action. Become part of what we are creating.",
+    "Our numbers are our strength. The more who join, the harder we are to stop.",
+    "Walk with us, fight with us, rebuild with us. Your place is here.",
+
+    "Refuse to accept leaders who serve themselves. Demand leaders who serve the people.",
+    "Make it clear that this government no longer represents you. Let them hear your anger.",
+    "Force those in power to answer for their failures. Silence protects only the guilty.",
+    "Use every legal and public means to challenge corruption. Power must be questioned.",
+    "Do not reward incompetence with obedience. Hold leaders accountable.",
+    "Change does not come from polite requests. It comes from relentless pressure.",
+    "The state exists for the people, not the other way around. Demand that truth be honoured.",
+
+    "Defend what makes this nation who it is. Do not let it be erased.",
+    "Protect our culture, our traditions, and our future. Without them, we are nothing.",
+    "Stand guard over the soul of this country. Others will not protect it for you.",
+    "We must preserve our way of life against those who weaken it. Survival depends on strength.",
+    "Guard the nation as you would guard your family. Both are worth fighting for.",
+    "Hold onto who we are, even when everything else is falling apart.",
+    "Our identity is our foundation. Without it, no rebuilding is possible.",
+
+    "Despite everything, a better future is still possible. But only if we build it ourselves.",
+    "We are not doomed to suffer forever. Renewal is within reach.",
+    "The darkest nights always end with dawn. We must survive long enough to see it.",
+    "Our children deserve more than ruins. We must give them hope.",
+    "This nation can rise again. History has not finished with us.",
+    "From collapse can come rebirth. From suffering can come strength.",
+    "Believe in tomorrow, even when today feels unbearable."
+  ]
+};
+
+const BANK_KEYS = Object.keys(BANKS);
+
+/* ---------- State ---------- */
+let state = {
+  startedAt: null,
+  durationSec: 70 * 60,
+  timer: null,
+  round: 0,
+  partyId: null,
+  influence: 0,
+  members: 0,
+  funds: 0,
+  trust: 50,          // 0..100
+  heat: 0,            // crackdown risk (0..100)
+  history: [],        // log entries
+  selected: new Set(),
+  activeBank: BANK_KEYS[0],
+  crowd: null
+};
+
+/* ---------- Helpers ---------- */
+const $ = (id)=>document.getElementById(id);
+
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function fmtMoney(n){
+  // simple "marks" (M) style, but keep numeric
+  return n.toLocaleString("en-US");
+}
+function pad2(n){ return String(n).padStart(2,"0"); }
+function now(){ return Date.now(); }
+
+function pickCrowd(){
+  // Rotate with some randomness for variety
+  const idx = Math.floor(Math.random() * CROWDS.length);
+  return CROWDS[idx];
+}
+
+function partyById(id){ return PARTIES.find(p=>p.id===id) || null; }
+
+function logItem(title, tags, body){
+  state.history.unshift({ t: new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}), title, tags, body });
+  renderLog();
+}
+
+/* ---------- Scoring model (simple & classroom-friendly) ---------- */
+function analyseSpeech(sentences){
+  const text = sentences.join(" ").toLowerCase();
+
+  // Tone weights (appeal)
+  const tone = {
+    rage: countAny(text, ["furious","humiliation","betrayed","defiance","spit","chains","done pretending"]),
+    grief: countAny(text, ["mourning","buried","empty chair","wounded hearts","sorrow"]),
+    pride: countAny(text, ["still standing","survivors","strength","history","descendants"]),
+    fear: countAny(text, ["does this feel safe","uncertain","darkness","prey","edge","worse"]),
+    hope: countAny(text, ["rebuilt","rise","future","seeds","better","begins with us"])
+  };
+
+  // Policy/action cues (risk)
+  const riskFlags = {
+    violence: countAny(text, ["destroyed","violence","tear down","freedom is seized","force them","soldiers in a new war"]),
+    dictatorship: countAny(text, ["one strong hand","one leader","discipline will give us order","one voice","committees"]),
+    infoControl: countAny(text, ["control what poisons","silence voices","only ideas","truth must serve"]),
+    massTakeover: countAny(text, ["capture every institution","movement will become the state","control the future","replace it"])
+  };
+
+  // Scapegoat / enemy intensity (can boost in some crowds, also raises heat)
+  const enemies = countAny(text, [
+    "foreign powers","foreign masters","corrupt","leaders","profiteers","business elites","traitors","betrayal"
+  ]);
+
+  // Inclusivity vs obedience framing (affects trust)
+  const obedience = countAny(text, ["obey","obedience","follow orders","loyal population","loyalty is not optional","stand alone"]);
+  const belonging = countAny(text, ["belong","community","no citizen should feel alone","together","shared identity"]);
+
+  // Base appeal score
+  const appeal = (tone.rage*1.2 + tone.grief*0.9 + tone.pride*1.0 + tone.fear*1.1 + tone.hope*1.0)
+               + enemies*0.7 + belonging*0.6;
+
+  // Base risk score
+  const risk = (riskFlags.violence*3.0 + riskFlags.dictatorship*2.4 + riskFlags.infoControl*2.8 + riskFlags.massTakeover*2.0)
+             + enemies*0.8 + obedience*0.9;
+
+  // Trust movement: calm/logical (lower risk) vs coercive (lower trust)
+  let trustDelta = 0;
+  trustDelta += tone.hope*0.6 + tone.grief*0.3;
+  trustDelta -= riskFlags.violence*2.2 + riskFlags.infoControl*1.8 + obedience*0.7;
+
+  // “Plan-ness” proxy: economic/infrastructure phrasing slightly reduces heat
+  const plan = countAny(text, ["rebuild","industries","factories","roads","jobs","infrastructure","planning","experts","organised","regulation"]);
+  const planBonus = plan * 0.35;
+
+  return { appeal, risk, trustDelta, planBonus, tone, riskFlags, enemies };
+}
+
+function countAny(text, needles){
+  let c = 0;
+  for(const n of needles){
+    if(text.includes(n)) c += 1;
+  }
+  return c;
+}
+
+/* ---------- Events ---------- */
+function rollEvents(analysis){
+  // Heat and trust drive chance of crackdown/violence
+  const heat = state.heat;
+  const trust = state.trust;
+
+  const events = [];
+
+  // Rival disruption chance rises with your heat
+  const rivalChance = clamp(0.06 + heat/180, 0.06, 0.55);
+  if(Math.random() < rivalChance){
+    const severity = Math.random();
+    if(severity < 0.55){
+      events.push({type:"warn", title:"Rival disruption", body:"A rival group heckles and disrupts your rally. Some attendees leave early.", effect:{members:-randInt(3,10), influence:-randInt(1,4)}});
+    }else{
+      events.push({type:"bad", title:"Street violence nearby", body:"A clash breaks out outside the hall. Newspapers blame “political extremists.”", effect:{trust:-randInt(3,8), members:-randInt(5,14), heat:+randInt(4,10)}});
+    }
+  }
+
+  // Police attention (crackdown) chance rises with heat and low trust
+  const crackdownChance = clamp(0.05 + heat/160 + (50-trust)/140, 0.05, 0.65);
+  if(Math.random() < crackdownChance && analysis.risk > 6){
+    const severity = Math.random();
+    if(severity < 0.6){
+      events.push({type:"warn", title:"Police warning", body:"Authorities issue a warning about unlawful agitation. Organisers are monitored.", effect:{heat:+randInt(3,7), trust:-randInt(2,5)}});
+    } else {
+      events.push({type:"bad", title:"Arrests", body:"Several organisers are arrested for incitement/public order offences. Momentum stalls for a round.", effect:{members:-randInt(8,20), funds:-randInt(20,80), influence:-randInt(3,9), heat:+randInt(6,14), trust:-randInt(4,10)}});
+    }
+  }
+
+  // Economic shock events (random baseline) encourage certain rhetoric
+  if(Math.random() < 0.12){
+    const pick = randInt(0,2);
+    if(pick===0) events.push({type:"warn", title:"Inflation spike", body:"Prices jump again this week. Crowds are anxious and reactive.", effect:{ }});
+    if(pick===1) events.push({type:"warn", title:"Unemployment report", body:"A new report shows rising unemployment. People want concrete solutions.", effect:{ }});
+    if(pick===2) events.push({type:"warn", title:"Foreign negotiation headlines", body:"Talks with foreign powers dominate the news. National humiliation narratives spread.", effect:{ }});
+  }
+
+  return events;
+}
+
+function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
+
+/* ---------- UI Render ---------- */
+function renderPartySelect(){
+  const sel = $("partySelect");
+  sel.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = "Select a party…";
+  sel.appendChild(opt0);
+  for(const p of PARTIES){
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name;
+    sel.appendChild(opt);
+  }
+}
+
+function renderTabs(){
+  const tabs = $("tabs");
+  tabs.innerHTML = "";
+  BANK_KEYS.forEach((k)=>{
+    const d = document.createElement("div");
+    d.className = "tab" + (state.activeBank===k ? " active":"");
+    d.textContent = k;
+    d.onclick = ()=>{
+      state.activeBank = k;
+      renderTabs();
+      renderSentences();
+    };
+    tabs.appendChild(d);
+  });
+}
+
+function renderSentences(){
+  const list = $("sentenceList");
+  list.innerHTML = "";
+
+  const bankKey = state.activeBank;
+  const arr = BANKS[bankKey];
+
+  arr.forEach((s, idx)=>{
+    const id = bankKey + "||" + idx;
+    const row = document.createElement("label");
+    row.className = "sentence";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = state.selected.has(id);
+    cb.onchange = ()=>{
+      if(cb.checked) state.selected.add(id);
+      else state.selected.delete(id);
+      refreshPreview();
+    };
+    const txt = document.createElement("div");
+    txt.innerHTML = `<div>${escapeHtml(s)}</div>
+      <div class="meta">${escapeHtml(bankKey)} • #${idx+1}</div>`;
+    row.appendChild(cb);
+    row.appendChild(txt);
+    list.appendChild(row);
+  });
+
+  refreshPreview();
+}
+
+function refreshPreview(){
+  const sentences = getSelectedSentences();
+  $("speechPreview").textContent = sentences.length ? sentences.join("\n\n") : "Select sentences to assemble your speech…";
+  $("submitBtn").disabled = !(state.partyId && sentences.length>=3);
+  $("clearBtn").disabled = sentences.length===0;
+  $("copyBtn").disabled = sentences.length===0;
+}
+
+function renderKPIs(){
+  $("infl").textContent = state.influence;
+  $("inflTop").textContent = state.influence;
+  $("members").textContent = state.members;
+  $("funds").textContent = fmtMoney(state.funds);
+  $("trust").textContent = state.trust;
+  $("roundNum").textContent = state.round;
+  $("partyName").textContent = state.partyId ? partyById(state.partyId).name : "Not selected";
+}
+
+function renderLog(){
+  const log = $("log");
+  log.innerHTML = "";
+  for(const it of state.history){
+    const div = document.createElement("div");
+    div.className = "item";
+    const tags = (it.tags||[]).map(t=>{
+      const cls = t.kind==="good" ? "good" : t.kind==="bad" ? "bad" : "warn";
+      return `<span class="tag ${cls}">${escapeHtml(t.label)}</span>`;
+    }).join("");
+    div.innerHTML = `<div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+        <div><b>${escapeHtml(it.title)}</b></div>
+        <div style="opacity:.65; font-size:11px;">${escapeHtml(it.t)}</div>
+      </div>
+      <div style="margin-top:8px;">${tags}</div>
+      <div style="margin-top:8px; color:rgba(255,255,255,.82);">${escapeHtml(it.body)}</div>`;
+    log.appendChild(div);
+  }
+}
+
+/* ---------- Selection helpers ---------- */
+function getSelectedSentences(){
+  // Keep stable ordering by bank then index
+  const items = [...state.selected].map(key=>{
+    const [bank, idxStr] = key.split("||");
+    const idx = parseInt(idxStr,10);
+    return { bank, idx, text: BANKS[bank][idx] };
+  }).sort((a,b)=>{
+    if(a.bank===b.bank) return a.idx-b.idx;
+    return BANK_KEYS.indexOf(a.bank) - BANK_KEYS.indexOf(b.bank);
+  });
+  return items.map(x=>x.text);
+}
+
+function clearSelection(){
+  state.selected.clear();
+  renderSentences();
+}
+
+/* ---------- Game loop ---------- */
+function startTimerIfNeeded(){
+  if(state.timer) return;
+  state.startedAt = now();
+  state.timer = setInterval(()=>{
+    const elapsed = Math.floor((now() - state.startedAt)/1000);
+    const left = clamp(state.durationSec - elapsed, 0, state.durationSec);
+    const mm = Math.floor(left/60);
+    const ss = left % 60;
+    $("timeLeft").textContent = `${pad2(mm)}:${pad2(ss)}`;
+    if(left<=0){
+      clearInterval(state.timer);
+      state.timer = null;
+      $("submitBtn").disabled = true;
+      logItem("Session ended", [{kind:"warn", label:"Time"}], "Time is up. Export totals and debrief.");
+    }
+  }, 250);
+}
+
+function submitSpeech(){
+  if(!state.partyId) return;
+  const sentences = getSelectedSentences();
+  if(sentences.length < 3) return;
+
+  startTimerIfNeeded();
+
+  state.round += 1;
+
+  // Pick crowd for this round
+  state.crowd = pickCrowd();
+  const party = partyById(state.partyId);
+
+  const analysis = analyseSpeech(sentences);
+
+  // Crowd alignment multiplier
+  const baseMult = party.baseCrowds[state.crowd.id] || 1.0;
+  const crowdVol = state.crowd.volatility;
+
+  // Appeal -> member gain (with volatility), also funds and influence
+  const rawSupport = (analysis.appeal + analysis.planBonus) * baseMult;
+  // Translate to members gained/lost
+  let deltaMembers = Math.round((rawSupport*2.2) * crowdVol) - Math.round((analysis.risk*0.9));
+  // Clamp swing
+  deltaMembers = clamp(deltaMembers, -25, 35);
+
+  // Donations (funds) depend on crowd and trust
+  const donationFactor = state.crowd.donationRate * (0.6 + state.trust/140);
+  let deltaFunds = Math.round(Math.max(0, deltaMembers) * 8 * donationFactor) - Math.round(Math.max(0, analysis.risk-4)*10);
+  deltaFunds = clamp(deltaFunds, -120, 260);
+
+  // Influence is driven by membership growth + visibility, reduced by backlash
+  let deltaInfluence = Math.round(Math.max(0, deltaMembers) * 0.45 + analysis.appeal*0.25 - analysis.risk*0.35);
+  deltaInfluence = clamp(deltaInfluence, -12, 18);
+
+  // Heat increases with risk and enemy intensity; reduced slightly by trust and plan
+  let heatDelta = Math.round(analysis.risk*1.4 + analysis.enemies*0.8 - analysis.planBonus*1.0 - state.trust/30);
+  heatDelta = clamp(heatDelta, -6, 18);
+
+  // Trust changes
+  let trustDelta = Math.round(analysis.trustDelta);
+  trustDelta = clamp(trustDelta, -14, 10);
+
+  // Apply base changes
+  state.members = Math.max(0, state.members + deltaMembers);
+  state.funds = Math.max(0, state.funds + deltaFunds);
+  state.influence = Math.max(0, state.influence + deltaInfluence);
+  state.heat = clamp(state.heat + heatDelta, 0, 100);
+  state.trust = clamp(state.trust + trustDelta, 0, 100);
+
+  // Round log
+  const tags = [];
+  if(deltaMembers >= 8) tags.push({kind:"good", label:`+${deltaMembers} members`});
+  else if(deltaMembers <= -6) tags.push({kind:"bad", label:`${deltaMembers} members`});
+  else tags.push({kind:"warn", label:`${deltaMembers>=0?"+":""}${deltaMembers} members`});
+
+  if(deltaInfluence >= 4) tags.push({kind:"good", label:`+${deltaInfluence} influence`});
+  else if(deltaInfluence <= -4) tags.push({kind:"bad", label:`${deltaInfluence} influence`});
+  else tags.push({kind:"warn", label:`${deltaInfluence>=0?"+":""}${deltaInfluence} influence`});
+
+  if(deltaFunds >= 60) tags.push({kind:"good", label:`+${fmtMoney(deltaFunds)} funds`});
+  else if(deltaFunds <= -40) tags.push({kind:"bad", label:`${fmtMoney(deltaFunds)} funds`});
+  else tags.push({kind:"warn", label:`${deltaFunds>=0?"+":""}${fmtMoney(deltaFunds)} funds`});
+
+  if(heatDelta >= 8) tags.push({kind:"bad", label:`Heat +${heatDelta}`});
+  else if(heatDelta <= -3) tags.push({kind:"good", label:`Heat ${heatDelta}`});
+  else tags.push({kind:"warn", label:`Heat ${heatDelta>=0?"+":""}${heatDelta}`});
+
+  logItem(
+    `Round ${state.round}: ${state.crowd.name} reaction`,
+    tags,
+    `Your speech is delivered to ${state.crowd.name}. Popularity and risk shift based on your rhetoric mix.`
+  );
+
+  // Events after scoring
+  const events = rollEvents(analysis);
+  for(const ev of events){
+    applyEvent(ev);
+  }
+
+  // Minor passive changes
+  // Funds convert to influence slowly (party machine), but heat reduces it
+  const machine = Math.round((state.funds/400) * (1 - state.heat/160));
+  if(machine>0){
+    state.influence += machine;
+    state.funds = Math.max(0, state.funds - machine*8);
+    logItem("Party machine effect", [{kind:"good", label:`+${machine} influence`}], "Small donations and organisation increase your influence over time.");
+  }
+
+  renderKPIs();
+  clearSelection(); // new speech each round
+}
+
+function applyEvent(ev){
+  const tags = [{kind: ev.type==="bad"?"bad":ev.type==="good"?"good":"warn", label: ev.title}];
+  if(ev.effect){
+    if(typeof ev.effect.members==="number") state.members = Math.max(0, state.members + ev.effect.members);
+    if(typeof ev.effect.funds==="number") state.funds = Math.max(0, state.funds + ev.effect.funds);
+    if(typeof ev.effect.influence==="number") state.influence = Math.max(0, state.influence + ev.effect.influence);
+    if(typeof ev.effect.trust==="number") state.trust = clamp(state.trust + ev.effect.trust, 0, 100);
+    if(typeof ev.effect.heat==="number") state.heat = clamp(state.heat + ev.effect.heat, 0, 100);
+  }
+  logItem(ev.title, tags, ev.body);
+}
+
+/* ---------- Export / Reset ---------- */
+function exportTotals(){
+  const party = state.partyId ? partyById(state.partyId).name : "N/A";
+  const name = $("studentName").value?.trim() || "Student";
+  const summary = {
+    student: name,
+    party,
+    rounds: state.round,
+    influence: state.influence,
+    members: state.members,
+    funds: state.funds,
+    trust: state.trust,
+    heat: state.heat,
+    timestamp: new Date().toISOString()
+  };
+  const text = `Beer Hall Speech Simulator — Totals
+Student: ${summary.student}
+Party: ${summary.party}
+Rounds: ${summary.rounds}
+Influence: ${summary.influence}
+Members: ${summary.members}
+Funds: ${summary.funds}
+Public trust: ${summary.trust}
+Heat: ${summary.heat}
+Time: ${new Date().toLocaleString()}
+`;
+
+  copyToClipboard(text).then(()=>{
+    logItem("Totals copied", [{kind:"good", label:"Copied"}], "Your totals were copied to clipboard. Paste into the class collection form/chat.");
+  }).catch(()=>{
+    // fallback: download JSON
+    try{
+      const blob = new Blob([JSON.stringify(summary,null,2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "speech_sim_totals.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      logItem("Totals downloaded", [{kind:"warn", label:"Download"}], "Clipboard blocked. A JSON file was downloaded instead.");
+    }catch(e){
+      alert(text);
+    }
+  });
+}
+
+function resetGame(){
+  if(!confirm("Reset all scores and rounds?")) return;
+  if(state.timer){ clearInterval(state.timer); state.timer = null; }
+  state = {
+    startedAt: null,
+    durationSec: 70 * 60,
+    timer: null,
+    round: 0,
+    partyId: null,
+    influence: 0,
+    members: 0,
+    funds: 0,
+    trust: 50,
+    heat: 0,
+    history: [],
+    selected: new Set(),
+    activeBank: BANK_KEYS[0],
+    crowd: null
+  };
+  $("timeLeft").textContent = "70:00";
+  $("studentName").value = "";
+  $("partySelect").value = "";
+  renderTabs();
+  renderSentences();
+  renderKPIs();
+  renderLog();
+  logItem("New session ready", [{kind:"warn", label:"Setup"}], "Select a party and begin building speeches.");
+}
+
+/* ---------- Clipboard ---------- */
+async function copyToClipboard(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(text);
+  }
+  // fallback
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position="fixed";
+  ta.style.left="-9999px";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  const ok = document.execCommand("copy");
+  document.body.removeChild(ta);
+  if(!ok) throw new Error("copy failed");
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+}
+
+/* ---------- Modal ---------- */
+function openModal(){
+  $("modalBg").style.display = "flex";
+  $("debugLine").textContent = `Device: ${navigator.userAgent}`;
+}
+function closeModal(){ $("modalBg").style.display = "none"; }
+
+/* ---------- Init ---------- */
+function init(){
+  renderPartySelect();
+  renderTabs();
+  renderSentences();
+  renderKPIs();
+
+  logItem("New session ready", [{kind:"warn", label:"Setup"}], "Select a party and begin building speeches.");
+
+  $("partySelect").addEventListener("change", (e)=>{
+    const id = e.target.value;
+    state.partyId = id || null;
+    renderKPIs();
+    refreshPreview();
+    if(state.partyId){
+      const p = partyById(state.partyId);
+      logItem("Party selected", [{kind:"warn", label:"Party"}], `${p.name} — style: ${p.vibe}. Focus: ${p.focus.join(", ")}.`);
+    }
+  });
+
+  $("submitBtn").addEventListener("click", submitSpeech);
+  $("clearBtn").addEventListener("click", clearSelection);
+  $("copyBtn").addEventListener("click", ()=>{
+    const speech = $("speechPreview").textContent;
+    copyToClipboard(speech).then(()=>{
+      logItem("Speech copied", [{kind:"good", label:"Copied"}], "Speech text copied to clipboard.");
+    }).catch(()=>{
+      alert("Clipboard blocked on this device. You can still submit speeches inside the game.");
+    });
+  });
+
+  $("exportBtn").addEventListener("click", exportTotals);
+  $("resetBtn").addEventListener("click", resetGame);
+  $("helpBtn").addEventListener("click", openModal);
+  $("closeModal").addEventListener("click", closeModal);
+  $("modalBg").addEventListener("click", (e)=>{ if(e.target.id==="modalBg") closeModal(); });
+
+  // Prevent accidental selection dragging on iPad
+  document.addEventListener("touchmove", ()=>{}, {passive:true});
+}
+init();
+</script>
+</body>
+</html>
